@@ -8,7 +8,7 @@ interface MarkAttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: Date | null;
-  userRole: 'teacher' | 'principal';
+  userRole: 'TEACHER' | 'SUPER_ADMIN';
 }
 
 type AttendanceState = Record<number, 'present' | 'absent' | 'leave'>;
@@ -39,7 +39,7 @@ export default function MarkAttendanceModal({
   // 4. Permission Rule:
   // Principal: Can always edit.
   // Teacher: Can ONLY edit if it is Today.
-  const canEdit = userRole === 'principal' || (userRole === 'teacher' && isToday);
+  const canEdit = userRole === 'SUPER_ADMIN' || (userRole === 'TEACHER' && isToday);
 
   // Initialize Data
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function MarkAttendanceModal({
         </div>
 
         {/* --- DYNAMIC BANNER LOGIC --- */}
-        {!canEdit && userRole === 'teacher' && (
+        {!canEdit && userRole === 'TEACHER' && (
           <div className="bg-blue-50 dark:bg-blue-900/20 px-6 py-3 text-xs text-blue-600 dark:text-blue-300 font-medium border-b border-blue-100 dark:border-blue-800 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             

@@ -1,31 +1,53 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { API } from "@/constants/API/api";
 import StudentCard from "@/components/cards/StudentCard";
-import StudentDetailsModal, { StudentFullDetails } from "@/components/modals/StudentDetailsModal";
-import RegisterStudentModal from "@/components/modals/RegisterStudentModal"; // Import New Modal
-import { STUDENTS } from "@/utils/dummyData";
+import StudentDetailsModal from "@/components/modals/StudentDetailsModal";
+import RegisterStudentModal from "@/components/modals/RegisterStudentModal";
+import { StudentFullDetails } from "@/constants/Types";
 
 function Students() {
   const [filter, setFilter] = useState("Total Students");
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // 1. Convert STUDENTS constant to local state so we can add to it dynamically
-  const [studentsList, setStudentsList] = useState(STUDENTS);
+  const [studentsList, setStudentsList] = useState<StudentFullDetails[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false); // <--- New State
-  
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter Logic uses the State 'studentsList' now
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(API.GET_ALL_STUDENTS,{
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        setStudentsList(response.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
   const filteredStudents = studentsList.filter((student) => {
+    const userSTring = localStorage.getItem("user");
+    const user = userSTring && JSON.parse(userSTring);
     const matchesCategory =
       filter === "Total Students"
         ? true
-        : student.registrarId === "65bf9c1e8d2a4b3f1c9e7d01";
+        : student.registrarId === user.id;
 
     const query = searchQuery.toLowerCase();
     const matchesSearch =
@@ -35,22 +57,22 @@ function Students() {
     return matchesCategory && matchesSearch;
   });
 
-  const handleCardClick = (id: number) => {
+  const handleCardClick = (id: string) => {
     setSelectedStudentId(id);
     setIsModalOpen(true);
   };
 
-  // 2. Handler for adding a new student
   const handleRegisterStudent = (newStudent: StudentFullDetails) => {
-    // Add to local state (In real app, this happens after API success)
-    // @ts-ignore - Ignoring type mismatch for 'id' if dummyData uses numbers and we passed string, or vice versa
-    setStudentsList((prev) => [newStudent, ...prev]); 
+    setStudentsList((prev) => [newStudent, ...prev]);
     setIsRegisterModalOpen(false);
   };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     }
@@ -64,11 +86,7 @@ function Students() {
 
   return (
     <div className="w-full p-4 md:p-10 min-h-screen pb-20">
-      
-      {/* Header Container */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6 relative z-40">
-        
-        {/* Title Section */}
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-primary dark:text-white">
             {filter}
@@ -78,23 +96,43 @@ function Students() {
           </p>
         </div>
 
-        {/* --- CONTROLS SECTION --- */}
         <div className="flex flex-col md:flex-row gap-4 w-full xl:w-auto">
-          
-          {/* 3. NEW BUTTON: Register Student */}
-          <button 
+          <button
             onClick={() => setIsRegisterModalOpen(true)}
             className="flex items-center justify-center gap-2 bg-primary dark:bg-white text-white dark:text-primary px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
             Add Student
           </button>
 
-          {/* Search Bar */}
           <div className="relative w-full md:w-64">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
             <input
@@ -106,7 +144,6 @@ function Students() {
             />
           </div>
 
-          {/* Filter Dropdown */}
           <div className="relative w-full md:w-64" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -114,14 +151,18 @@ function Students() {
             >
               <span>{filter}</span>
               <svg
-                className={`w-4 h-4 text-secondary dark:text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                className={`w-4 h-4 text-secondary dark:text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 strokeWidth="2"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
@@ -152,36 +193,42 @@ function Students() {
         </div>
       </div>
 
-      {/* Card Grid */}
-      <div className="flex flex-wrap gap-5 justify-center sm:justify-start z-0 relative">
-        {filteredStudents.map((student) => (
-          <StudentCard
-            key={student.id}
-            name={student.name}
-            role={student.role}
-            rollId={student.rollId}
-            attendance={student.attendance}
-            image={student.image}
-            onClick={() => handleCardClick(student.id)}
-          />
-        ))}
+      {loading ? (
+        <div className="w-full py-20 flex flex-col items-center justify-center text-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-primary animate-spin"></div>
+          <p className="text-secondary dark:text-gray-400 animate-pulse">
+            Loading students...
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-5 justify-center sm:justify-start z-0 relative">
+          {filteredStudents.map((student) => (
+            <StudentCard
+              key={student._id}
+              name={student.name}
+              role={student.role}
+              rollId={student.rollId}
+              attendance={student.attendance}
+              image={student.image}
+              onClick={() => handleCardClick(student._id)}
+            />
+          ))}
 
-        {filteredStudents.length === 0 && (
-          <div className="w-full py-20 flex flex-col items-center justify-center text-center text-secondary dark:text-gray-500">
-            <p>No students found.</p>
-          </div>
-        )}
-      </div>
+          {filteredStudents.length === 0 && (
+            <div className="w-full py-20 flex flex-col items-center justify-center text-center text-secondary dark:text-gray-500">
+              <p>No students found.</p>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* View/Edit Modal */}
       <StudentDetailsModal
         isOpen={isModalOpen}
         studentId={selectedStudentId}
         onClose={() => setIsModalOpen(false)}
       />
 
-      {/* 4. Register New Student Modal */}
-      <RegisterStudentModal 
+      <RegisterStudentModal
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
         onSave={handleRegisterStudent}

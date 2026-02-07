@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import RegisterStudentForm from "@/components/forms/RegisterStudentForm";
-import { StudentFullDetails } from "@/components/modals/StudentDetailsModal";
+import { StudentFullDetails } from "@/constants/Types";
 
 interface RegisterStudentModalProps {
   isOpen: boolean;
@@ -10,8 +10,11 @@ interface RegisterStudentModalProps {
   onSave: (newStudent: StudentFullDetails) => void;
 }
 
-export default function RegisterStudentModal({ isOpen, onClose, onSave }: RegisterStudentModalProps) {
-  
+export default function RegisterStudentModal({
+  isOpen,
+  onClose,
+  onSave,
+}: RegisterStudentModalProps) {
   // Handle Escape Key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

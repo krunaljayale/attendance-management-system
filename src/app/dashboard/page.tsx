@@ -1,8 +1,8 @@
-import StatCard from "@/components/cards/StatCard";
 import TotalStat from "@/components/cards/TotalStat";
 import StudentGenderChart from "@/components/cards/StudentGenderChart";
 import TopAttendants from "@/components/cards/TopAttendants";
 import WeeklyAbsentChart from "@/components/cards/WeeklyAbsentChart";
+import ParentStatCard from "@/components/cards/ParentStatCard";
 
 export default function Dashboard() {
   return (
@@ -15,12 +15,7 @@ export default function Dashboard() {
       </h6>
 
       <div className="lg:flex flex-row lg:py-5 justify-between gap-5">
-        <div className="grid md:grid-cols-2 grid-rows-2 gap-4 w-full">
-          <StatCard title="Total Students" value="570" />
-          <StatCard title="Present Today" value="570" />
-          <StatCard title="Absent Today" value="570" />
-          <StatCard title="Late Students Today" value="570" />
-        </div>
+        <ParentStatCard />
         <div className="my-5 lg:my-0 w-full md:flex">
           <TotalStat />
         </div>
@@ -28,13 +23,13 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div>
-          <StudentGenderChart/>
+          <StudentGenderChart />
         </div>
         <div>
-          <TopAttendants/>
+          <TopAttendants />
         </div>
         <div>
-          <WeeklyAbsentChart/>
+          <WeeklyAbsentChart />
         </div>
       </div>
     </div>

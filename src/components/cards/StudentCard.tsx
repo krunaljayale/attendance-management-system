@@ -19,6 +19,8 @@ export default function StudentCard({
           alt={name}
           fill
           className="object-cover group-hover:scale-110 transition-transform duration-300"
+          sizes="112px"
+          loading="eager"
         />
       </div>
 
