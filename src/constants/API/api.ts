@@ -1,4 +1,4 @@
-export const BASE_URL = "http://10.92.253.129:8080";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const API = {
   LOGIN: `${BASE_URL}/admin/login`,

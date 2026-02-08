@@ -1,40 +1,131 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🎓 Student Attendance & Management System
+A comprehensive web application designed for educational institutions to manage student records, track daily attendance with strict validation logic, manage academic holidays, and handle administrative profiles.
 
-## Getting Started
+🚀 Key Features
+👨‍🎓 Student Management
+Registration: Register new students with personal, academic, and guardian details.
 
-First, run the development server:
+Image Upload: Integrated Cloudinary support for uploading and storing student profile pictures.
 
-```bash
+Profile Editing: Full control to update student details including course information and contact details.
+
+Search & Filter: Filter students by enrollment status, course, or search by name/roll ID.
+
+📅 Smart Attendance System
+Role-Based Access:
+
+Teachers: Can only mark attendance for Today. Past and future dates are locked.
+
+Super Admins: Can edit Today and Past records (for corrections). Future dates remain locked.
+
+Timezone Precision: Implements strict Indian Standard Time (IST) logic to prevent timezone discrepancies when comparing "Today" vs "Yesterday".
+
+Status Tracking: Mark students as Present, Absent, or On Leave.
+
+🗓️ Holiday & Calendar Management
+Dynamic Calendar: Visual representation of holidays and Sundays on the attendance dashboard.
+
+Holiday Manager: Admins can add, view, and delete academic holidays.
+
+Safety Checks: Backend validation prevents the deletion of holidays that have already passed.
+
+🛡️ Admin & Security
+Profile Management: Admins can update their personal details (Phone, City, Department).
+
+Security: Password change functionality protected by JWT authentication.
+
+Dashboard: Quick overview of total students and specific cohorts.
+
+🛠️ Tech Stack
+Frontend:
+
+Framework: Next.js 14 (App Router)
+
+Language: TypeScript
+
+Styling: Tailwind CSS
+
+State/Network: React Hooks & Axios
+
+Icons: Lucide React / Heroicons
+
+Backend:
+
+Runtime: Node.js
+
+Framework: Express.js
+
+Database: MongoDB (Mongoose ORM)
+
+Authentication: JWT (JSON Web Tokens)
+
+Storage: Cloudinary (for images)
+
+⚙️ Environment Variables
+To run this project, you will need to add the following environment variables to your .env files.
+
+Frontend (.env.local)
+Bash
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+Backend (.env)
+Bash
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+📥 Installation & Setup
+Clone the repository
+
+Bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+Setup Backend
+
+Bash
+cd backend
+npm install
+npm start
+Setup Frontend
+
+Bash
+cd ../frontend # or root if next.js is in root
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Access the App Open http://localhost:3000 to view it in the browser.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+📂 Project Structure
+Plaintext
+├── components/
+│ ├── cards/ # Student & Info Cards
+│ ├── forms/ # Edit/Register Forms
+│ ├── modals/ # Attendance & Password Modals
+│ ├── profile/ # Profile specific components
+│ └── admin/ # Holiday Manager
+├── constants/
+│ ├── API/ # API Endpoints config
+│ └── Types.ts # TypeScript Interfaces
+├── app/ # Next.js App Router pages
+└── utils/ # Helper functions
+🧠 Key Logic Highlights
+Attendance Timezone Fix
+The application uses a custom helper to strip time and force Asia/Kolkata timezone comparison to ensure that a teacher logging in late at night or from a different server location cannot manipulate attendance records incorrectly.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Form Data Handling
+Complex nested objects (like personalInfo and guardianDetails) are handled dynamically in React forms to ensure seamless editing without data loss.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Learn More
+Fork the project
 
-To learn more about Next.js, take a look at the following resources:
+Create your Feature Branch (git checkout -b feature/AmazingFeature)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Commit your changes (git commit -m 'Add some AmazingFeature')
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Push to the Branch (git push origin feature/AmazingFeature)
 
-## Deploy on Vercel
+Open a Pull Request
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-=======
-# attendance-management-system
->>>>>>> 6fa171155417be29a6bf0a03c1ab63ebf13a6f63
+📄 License
+This project is licensed under the MIT License.
