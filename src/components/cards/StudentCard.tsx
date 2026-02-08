@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function StudentCard({
   name = "Undefined",
-  role = "Undefined",
+  course = "Undefined",
   image = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=60",
   rollId = 1111,
   attendance = "Undefined",
@@ -28,7 +28,7 @@ export default function StudentCard({
         {name}
       </h3>
       <p className="text-xs font-medium text-secondary dark:text-gray-400 mt-1 mb-6">
-        {role}
+        {course}
       </p>
 
       {/* <div className="flex items-center gap-4 mb-8">

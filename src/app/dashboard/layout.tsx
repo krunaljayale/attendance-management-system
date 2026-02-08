@@ -53,7 +53,7 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <div className="min-h-screen bg-background w-full transition-colors duration-300">
-        <div className="bg-white dark:bg-primary p-5 transition-colors duration-300 shadow-sm dark:shadow-none relative z-50">
+        <div className="sticky top-0 left-0 right-0 bg-white dark:bg-primary p-5 transition-colors duration-300 shadow-sm dark:shadow-none z-50">
           <div className="flex justify-between items-center">
             <div className="flex text-2xl items-center gap-2 text-primary dark:text-white font-bold text tracking-tight z-50">
               <span className="text">⚡</span>

@@ -27,18 +27,21 @@ export default function WeeklyStatChart() {
       try {
         setLoading(true);
         setIsLoaded(false);
-        
-        const response = await axios.get(`${API.GET_WEEKLY_ATTENDANCE}/${viewMode}`,{
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+
+        const response = await axios.get(
+          `${API.GET_WEEKLY_ATTENDANCE}/${viewMode}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           },
-        });
-        
+        );
+
         const formattedData = response.data.map((item: any) => ({
-          day: item.day || item.label,
-          value: item.value || item.count,
+          day: item.day || item.label || "",
+          value: item.value ?? item.count ?? 0,
         }));
-        
+
         setChartData(formattedData);
         setTimeout(() => setIsLoaded(true), 100);
       } catch (error) {
@@ -53,11 +56,18 @@ export default function WeeklyStatChart() {
 
   const getCoordinates = (value: number, index: number) => {
     if (chartData.length === 0) return { x: CENTER, y: CENTER };
+
+    const safeValue = Number.isFinite(value) ? value : 0;
+
     const angle = (Math.PI * 2 * index) / chartData.length - Math.PI / 2;
-    const radius = (value / MAX_VALUE) * CHART_RADIUS;
+    const radius = (safeValue / MAX_VALUE) * CHART_RADIUS;
+
+    const x = CENTER + radius * Math.cos(angle);
+    const y = CENTER + radius * Math.sin(angle);
+
     return {
-      x: CENTER + radius * Math.cos(angle),
-      y: CENTER + radius * Math.sin(angle),
+      x: Number.isFinite(x) ? x : CENTER,
+      y: Number.isFinite(y) ? y : CENTER,
     };
   };
 
@@ -86,15 +96,18 @@ export default function WeeklyStatChart() {
     );
   };
 
-  const mainColor = viewMode === 'absent' ? '#F002C5' : '#10B981';
-  const bgFillColor = viewMode === 'absent' ? 'rgba(240, 2, 197, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+  const mainColor = viewMode === "absent" ? "#F002C5" : "#10B981";
+  const bgFillColor =
+    viewMode === "absent"
+      ? "rgba(240, 2, 197, 0.1)"
+      : "rgba(16, 185, 129, 0.1)";
 
   return (
     <div className="bg-white dark:bg-[#1A0F1E] p-5 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm flex flex-col h-full items-center justify-between min-h-[320px] transition-colors duration-300">
       <div className="w-full flex justify-between items-center z-10 mb-4">
         <div>
           <h3 className="text-lg font-bold text-primary dark:text-white">
-            Weekly {viewMode === 'absent' ? 'Absent' : 'Present'}
+            Weekly {viewMode === "absent" ? "Absent" : "Present"}
           </h3>
           <p className="text-xs text-secondary dark:text-gray-400">
             vs. Last Week
@@ -128,7 +141,9 @@ export default function WeeklyStatChart() {
       <div className="relative flex-1 w-full flex items-center justify-center py-4">
         {loading ? (
           <div className="w-full h-64 flex flex-col items-center justify-center gap-3 animate-pulse">
-            <div className={`w-32 h-32 rounded-full border-4 border-gray-100 dark:border-gray-800 border-t-[${mainColor}] animate-spin`}></div>
+            <div
+              className={`w-32 h-32 rounded-full border-4 border-gray-100 dark:border-gray-800 border-t-[${mainColor}] animate-spin`}
+            ></div>
             <span className="text-xs text-gray-400">Loading chart...</span>
           </div>
         ) : (
@@ -197,8 +212,10 @@ export default function WeeklyStatChart() {
                     {item.day}
                   </text>
 
+                  {/* Invisible Hit Area */}
                   <circle cx={x} cy={y} r={20} fill="transparent" />
 
+                  {/* Visible Data Dot */}
                   <circle
                     cx={x}
                     cy={y}
@@ -215,6 +232,7 @@ export default function WeeklyStatChart() {
                     style={{ transitionDelay: `${index * 100}ms` }}
                   />
 
+                  {/* Tooltip */}
                   <g
                     className={`transition-all duration-300 ease-out ${
                       isHovered

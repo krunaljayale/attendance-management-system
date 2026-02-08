@@ -27,42 +27,52 @@ export default function EditStudentForm({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to format ISO date to YYYY-MM-DD
   const formatDate = (dateString?: string | Date) => {
     if (!dateString) return "";
     return new Date(dateString).toISOString().split("T")[0];
   };
 
-  // Initialize state with existing data + defaults for nested fields
-  const [formData, setFormData] = useState({
-    ...student,
-    // Format dates for input fields
-    courseStartDate: formatDate(student.courseStartDate),
-    courseEndDate: formatDate(student.courseEndDate),
+  // Helper to map student data to form structure
+  const mapStudentToForm = (data: StudentFullDetails) => ({
+    ...data,
+    // FIX: Map existing 'role' to 'course' if course is missing
+    course: (data as any).course || data.course || "",
 
-    // Ensure nested objects exist
+    courseStartDate: formatDate(data.courseStartDate),
+    courseEndDate: formatDate(data.courseEndDate),
+
+    // Safety check for nested objects
     personalInfo: {
-      dob: formatDate(student.personalInfo?.dob),
-      gender: student.personalInfo?.gender || "Male",
-      bloodGroup: student.personalInfo?.bloodGroup || "",
-      casteCategory: student.personalInfo?.casteCategory || "General",
-      aadharCard: student.personalInfo?.aadharCard || "",
+      dob: formatDate(data.personalInfo?.dob),
+      gender: data.personalInfo?.gender || "Male",
+      bloodGroup: data.personalInfo?.bloodGroup || "",
+      casteCategory: data.personalInfo?.casteCategory || "General",
+      aadharCard: data.personalInfo?.aadharCard || "",
     },
     guardianDetails: {
-      fatherName: student.guardianDetails?.fatherName || "",
-      motherName: student.guardianDetails?.motherName || "",
-      primaryPhone: student.guardianDetails?.primaryPhone || "",
-      secondaryPhone: student.guardianDetails?.secondaryPhone || "",
+      fatherName: data.guardianDetails?.fatherName || "",
+      motherName: data.guardianDetails?.motherName || "",
+      primaryPhone: data.guardianDetails?.primaryPhone || "",
+      secondaryPhone: data.guardianDetails?.secondaryPhone || "",
       address: {
-        street: student.guardianDetails?.address?.street || "",
-        city: student.guardianDetails?.address?.city || "",
-        state: student.guardianDetails?.address?.state || "",
-        pincode: student.guardianDetails?.address?.pincode || "",
+        street: data.guardianDetails?.address?.street || "",
+        city: data.guardianDetails?.address?.city || "",
+        state: data.guardianDetails?.address?.state || "",
+        pincode: data.guardianDetails?.address?.pincode || "",
       },
     },
   });
 
-  // Handle Nested Updates
+  // FIX: Initialize state with the mapped student data immediately
+  const [formData, setFormData] = useState(mapStudentToForm(student));
+
+  // FIX: Sync state if the student prop updates
+  useEffect(() => {
+    if (student) {
+      setFormData(mapStudentToForm(student));
+    }
+  }, [student]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -72,28 +82,19 @@ export default function EditStudentForm({
 
     if (name.includes(".")) {
       const parts = name.split(".");
-
       if (parts.length === 2) {
-        // e.g. personalInfo.dob
         const [parent, child] = parts;
         setFormData((prev: any) => ({
           ...prev,
-          [parent]: {
-            ...prev[parent],
-            [child]: value,
-          },
+          [parent]: { ...prev[parent], [child]: value },
         }));
       } else if (parts.length === 3) {
-        // e.g. guardianDetails.address.city
         const [parent, mid, child] = parts;
         setFormData((prev: any) => ({
           ...prev,
           [parent]: {
             ...prev[parent],
-            [mid]: {
-              ...prev[parent][mid],
-              [child]: value,
-            },
+            [mid]: { ...prev[parent][mid], [child]: value },
           },
         }));
       }
@@ -103,7 +104,6 @@ export default function EditStudentForm({
         [name]: name === "marks" || name === "rollId" ? Number(value) : value,
       }));
     }
-
     if (error) setError(null);
   };
 
@@ -112,7 +112,7 @@ export default function EditStudentForm({
     if (!file) return;
 
     if (!CLOUDINARY_UPLOAD_PRESET) {
-      setError("Missing Cloudinary Upload Preset configuration");
+      setError("Missing Cloudinary Config");
       return;
     }
 
@@ -124,37 +124,57 @@ export default function EditStudentForm({
 
     try {
       const response = await axios.post(CLOUDINARY_API_URL, uploadData);
-      setFormData((prev) => ({
-        ...prev,
-        image: response.data.secure_url,
-      }));
+      setFormData((prev) => ({ ...prev, image: response.data.secure_url }));
     } catch (err) {
       console.error(err);
-      setError("Failed to upload image. Please check your connection.");
+      setError("Failed to upload image.");
     } finally {
       setIsUploading(false);
     }
   };
 
+  // FIX: Added .trim() to ensure spaces are not counted as valid input
+  const validateForm = () => {
+    if (!formData.name?.trim()) return "Full Name is required.";
+    if (!formData.email?.trim()) return "Email Address is required.";
+    if (!formData.rollId) return "Roll Number is required.";
+    if (!formData.course?.trim()) return "Course is required.";
+    if (!formData.personalInfo.dob) return "Date of Birth is required.";
+    if (!formData.guardianDetails.primaryPhone?.trim())
+      return "Primary Contact is required.";
+    if (!formData.courseStartDate) return "Start Date is required.";
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsSaving(true);
     setError(null);
 
     try {
-      // Assuming API needs ID in URL, otherwise remove `${student._id}`
-      const response = await axios.put(API.EDIT_STUDENT_DETAILS, formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      // Ensure we send role matching the course if backend still expects role
+      const payload = { ...formData, role: formData.course };
+
+      const response = await axios.put(
+        `${API.EDIT_STUDENT_DETAILS}/${student._id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
-      });
+      );
       if (response.status === 200) {
         onSave(response.data);
       }
     } catch (err: any) {
       console.error(err);
-      const serverMessage =
-        err.response?.data?.message || "Failed to update student details.";
+      const serverMessage = err.response?.data?.message || "Failed to update.";
       setError(serverMessage);
     } finally {
       setIsSaving(false);
@@ -173,7 +193,7 @@ export default function EditStudentForm({
         <button
           type="button"
           onClick={onCancel}
-          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+          className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -194,43 +214,39 @@ export default function EditStudentForm({
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-8">
-        {/* Profile Image */}
         <div className="flex flex-col items-center gap-4">
-          <div className="relative group">
-            <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-white/10 shadow-lg relative bg-gray-100 flex items-center justify-center">
-              {isUploading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : (
-                <Image
-                  src={formData.image || "/placeholder.jpg"}
-                  alt="Profile"
-                  fill
-                  className="object-cover"
-                  sizes="112px"
-                />
-              )}
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer z-10"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-white"
-                >
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                  <circle cx="12" cy="13" r="4"></circle>
-                </svg>
+          <div className="relative group w-28 h-28 rounded-full overflow-hidden border-4 border-white dark:border-white/10 shadow-lg relative bg-gray-100 flex items-center justify-center">
+            {isUploading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </div>
+            ) : (
+              <Image
+                src={formData.image || "/placeholder.jpg"}
+                alt="Profile"
+                fill
+                className="object-cover"
+              />
+            )}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer z-10"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-white"
+              >
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
             </div>
             <input
               type="file"
@@ -249,7 +265,6 @@ export default function EditStudentForm({
           </button>
         </div>
 
-        {/* 1. Identity & Academics */}
         <section>
           <SectionHeader
             number="1"
@@ -267,8 +282,15 @@ export default function EditStudentForm({
             <InputGroup
               label="Email Address"
               name="email"
-              type="email"
               value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <InputGroup
+              label="Roll Number"
+              name="rollId"
+              type="number"
+              value={formData.rollId}
               onChange={handleChange}
               required
             />
@@ -286,24 +308,21 @@ export default function EditStudentForm({
                 <option value="Active">Active</option>
                 <option value="Completed">Completed</option>
                 <option value="Dropped">Dropped</option>
-                <option value="Probation">Probation</option>
+                <option value="Suspended">Suspended</option>
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <InputGroup
-                label="Role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                type="text"
-                required
-              />
-            </div>
+            <InputGroup
+              label="Course"
+              name="course"
+              value={formData.course}
+              onChange={handleChange}
+              required
+              placeholder="e.g. Web Development"
+            />
           </div>
         </section>
 
-        {/* 2. Personal Information */}
         <section>
           <SectionHeader
             number="2"
@@ -319,7 +338,6 @@ export default function EditStudentForm({
               onChange={handleChange}
               required
             />
-
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-secondary dark:text-gray-500 uppercase">
                 Gender
@@ -335,14 +353,12 @@ export default function EditStudentForm({
                 <option value="Other">Other</option>
               </select>
             </div>
-
             <InputGroup
               label="Blood Group"
               name="personalInfo.bloodGroup"
               value={formData.personalInfo.bloodGroup}
               onChange={handleChange}
             />
-
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-secondary dark:text-gray-500 uppercase">
                 Category
@@ -359,7 +375,6 @@ export default function EditStudentForm({
                 <option value="ST">ST</option>
               </select>
             </div>
-
             <InputGroup
               label="Aadhar Card"
               name="personalInfo.aadharCard"
@@ -369,7 +384,6 @@ export default function EditStudentForm({
           </div>
         </section>
 
-        {/* 3. Guardian & Contact Details */}
         <section>
           <SectionHeader
             number="3"
@@ -403,7 +417,6 @@ export default function EditStudentForm({
               onChange={handleChange}
             />
           </div>
-
           <div className="mt-5 space-y-1.5">
             <label className="text-xs font-bold text-secondary dark:text-gray-500 uppercase">
               Address
@@ -445,7 +458,6 @@ export default function EditStudentForm({
           </div>
         </section>
 
-        {/* 4. Course & Performance */}
         <section>
           <SectionHeader
             number="4"
@@ -482,14 +494,6 @@ export default function EditStudentForm({
               onChange={handleChange}
             />
             <InputGroup
-              label="Roll ID"
-              name="rollId"
-              type="number"
-              value={formData.rollId}
-              onChange={handleChange}
-              required
-            />
-            <InputGroup
               label="Certificate ID"
               name="certificateId"
               value={formData.certificateId || ""}
@@ -508,15 +512,14 @@ export default function EditStudentForm({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isUploading}
-          className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-700 text-secondary dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 text-sm font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+          className="flex-1 px-6 py-3 border border-gray-200 dark:border-gray-700 text-secondary dark:text-white hover:bg-gray-50 dark:hover:bg-white/5 text-sm font-bold rounded-xl"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving || isUploading}
-          className="flex-1 px-6 py-3 bg-primary dark:bg-white dark:text-primary text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex-1 px-6 py-3 bg-primary dark:bg-white dark:text-primary text-white text-sm font-bold rounded-xl shadow-lg hover:shadow-primary/20"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
@@ -525,22 +528,14 @@ export default function EditStudentForm({
   );
 }
 
-function SectionHeader({
-  number,
-  title,
-  colorClass,
-}: {
-  number: string;
-  title: string;
-  colorClass: string;
-}) {
+function SectionHeader({ number, title, colorClass }: any) {
   return (
     <h3 className="text-sm font-bold text-primary dark:text-white mb-4 flex items-center gap-2">
       <span
         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${colorClass}`}
       >
         {number}
-      </span>
+      </span>{" "}
       {title}
     </h3>
   );

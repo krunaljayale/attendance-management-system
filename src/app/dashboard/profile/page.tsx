@@ -13,6 +13,8 @@ import {
 } from "@/components/profile/InfoCards";
 import { LoadingState, ErrorState } from "@/components/profile/ProfileStates";
 
+import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
+
 export default function ProfilePage() {
   const router = useRouter();
 
@@ -22,6 +24,8 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [formData, setFormData] = useState<Partial<AdminProfile>>({});
   const [isEditing, setIsEditing] = useState(false);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -141,8 +145,69 @@ export default function ProfilePage() {
 
         <div className="space-y-6">
           <AccountMetaCard profile={profile} />
+
+          {profile.role === "SUPER_ADMIN" && !isEditing && (
+            <div className="bg-white dark:bg-[#1E1624] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5">
+              <h3 className="font-bold text-lg text-primary dark:text-white mb-4">
+                System Settings
+              </h3>
+              <button
+                onClick={() => router.push("/dashboard/holidays")}
+                className="w-full py-3 rounded-xl border-2 border-primary/10 dark:border-white/10 text-primary dark:text-white font-bold text-sm hover:bg-primary/5 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Manage Holidays
+              </button>
+            </div>
+          )}
+
+          <div className="bg-white dark:bg-[#1E1624] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-white/5">
+            <h3 className="font-bold text-lg text-primary dark:text-white mb-4">
+              Security
+            </h3>
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="w-full py-3 rounded-xl border-2 border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Change Password
+            </button>
+          </div>
         </div>
       </div>
+
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 }

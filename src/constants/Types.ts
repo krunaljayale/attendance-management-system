@@ -1,6 +1,6 @@
 export interface StudentCardProps {
   name?: string;
-  role?: string;
+  course?: string;
   image?: string;
   rollId?: number;
   attendance?: string;
@@ -38,7 +38,7 @@ export interface StudentFullDetails {
   };
 
   // Academic Details
-  role: string;
+  course: string;
   courseStartDate: string;
   courseEndDate: string;
   status: string;
@@ -84,4 +84,28 @@ export interface StaffMember {
   department?: string;
   isActive: boolean;
   employeeId?: string;
+}
+
+export interface Holiday {
+  _id: string;
+  name: string;
+  date: string;
+  type: "National" | "Regional" | "Optional" | "Academic";
+  description?: string;
+}
+
+export interface MonthGridProps {
+  monthName: string;
+  monthIndex: number;
+  year: number;
+  selectedDate: Date | null;
+  onSelectDate: (d: Date) => void;
+  holidays: Record<string, "holiday">;
+}
+
+export interface MarkAttendanceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedDate: Date | null;
+  userRole: "TEACHER" | "SUPER_ADMIN";
 }

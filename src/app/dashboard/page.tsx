@@ -1,3 +1,5 @@
+"use client";
+
 import TotalStat from "@/components/cards/TotalStat";
 import StudentGenderChart from "@/components/cards/StudentGenderChart";
 import TopAttendants from "@/components/cards/TopAttendants";
@@ -5,10 +7,13 @@ import WeeklyAbsentChart from "@/components/cards/WeeklyAbsentChart";
 import ParentStatCard from "@/components/cards/ParentStatCard";
 
 export default function Dashboard() {
+  const currentUser = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user") || "")
+    : null;
   return (
     <div className="items-center px-8 py-4">
       <h1 className="text-black font-extrabold text-3xl dark:text-white">
-        Hello Krunal
+        Hello {currentUser?.name},
       </h1>
       <h6 className="text-gray-700 dark:text-gray-100 mt-1.5 font-medium">
         We hope you're having greate day.

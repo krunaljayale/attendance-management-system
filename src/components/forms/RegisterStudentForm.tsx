@@ -25,19 +25,17 @@ export default function RegisterStudentForm({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initial State matching the new Mongoose Schema structure
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     rollId: "" as unknown as number,
     image: "",
-    role: "Web Development",
+    course: "",
     courseStartDate: new Date().toISOString().split("T")[0],
     courseEndDate: "",
     status: "Active",
     registrarId: "",
 
-    // Personal Info
     personalInfo: {
       dob: "",
       gender: "Male",
@@ -46,7 +44,6 @@ export default function RegisterStudentForm({
       aadharCard: "",
     },
 
-    // Guardian Details
     guardianDetails: {
       fatherName: "",
       motherName: "",
@@ -61,7 +58,6 @@ export default function RegisterStudentForm({
     },
   });
 
-  // Fetch Registrar ID on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -77,7 +73,6 @@ export default function RegisterStudentForm({
     }
   }, []);
 
-  // Generic Change Handler for nested state
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -85,12 +80,10 @@ export default function RegisterStudentForm({
   ) => {
     const { name, value } = e.target;
 
-    // Handle nested updates based on naming convention "parent.child" or "parent.child.grandchild"
     if (name.includes(".")) {
       const parts = name.split(".");
 
       if (parts.length === 2) {
-        // e.g. personalInfo.dob
         const [parent, child] = parts;
         setFormData((prev: any) => ({
           ...prev,
@@ -100,7 +93,6 @@ export default function RegisterStudentForm({
           },
         }));
       } else if (parts.length === 3) {
-        // e.g. guardianDetails.address.city
         const [parent, mid, child] = parts;
         setFormData((prev: any) => ({
           ...prev,
@@ -114,7 +106,6 @@ export default function RegisterStudentForm({
         }));
       }
     } else {
-      // Top level fields
       setFormData((prev) => ({
         ...prev,
         [name]: name === "rollId" ? Number(value) : value,
@@ -158,6 +149,7 @@ export default function RegisterStudentForm({
     if (!formData.name) return "Full Name is required.";
     if (!formData.email) return "Email Address is required.";
     if (!formData.rollId) return "Roll Number is required.";
+    if (!formData.course) return "Course is required.";
     if (!formData.personalInfo.dob) return "Date of Birth is required.";
     if (!formData.guardianDetails.primaryPhone)
       return "Primary Contact Number is required.";
@@ -202,7 +194,6 @@ export default function RegisterStudentForm({
       onSubmit={handleSubmit}
       className="p-6 h-full flex flex-col bg-white dark:bg-primary"
     >
-      {/* Header */}
       <div className="flex justify-between items-center mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-primary dark:text-white">
           Register New Student
@@ -230,9 +221,7 @@ export default function RegisterStudentForm({
         </button>
       </div>
 
-      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto pr-2 space-y-8">
-        {/* Profile Image Section */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative group">
             <div
@@ -310,7 +299,6 @@ export default function RegisterStudentForm({
           </button>
         </div>
 
-        {/* 1. Identity & Academic Details */}
         <section>
           <SectionHeader
             number="1"
@@ -344,27 +332,17 @@ export default function RegisterStudentForm({
               required
               placeholder="2405"
             />
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-secondary dark:text-gray-500 uppercase">
-                Role / Course <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-medium text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-              >
-                <option value="Web Development">Web Development</option>
-                <option value="App Development">App Development</option>
-                <option value="Data Science">Data Science</option>
-                <option value="UI/UX Design">UI/UX Design</option>
-              </select>
-            </div>
+            <InputGroup
+              label="Course"
+              name="course"
+              value={formData.course}
+              onChange={handleChange}
+              required
+              placeholder="e.g. B.Tech Computer Science"
+            />
           </div>
         </section>
 
-        {/* 2. Personal Information */}
         <section>
           <SectionHeader
             number="2"
@@ -432,7 +410,6 @@ export default function RegisterStudentForm({
           </div>
         </section>
 
-        {/* 3. Guardian & Contact Details */}
         <section>
           <SectionHeader
             number="3"
@@ -512,7 +489,6 @@ export default function RegisterStudentForm({
           </div>
         </section>
 
-        {/* 4. Course Duration */}
         <section>
           <SectionHeader
             number="4"
@@ -539,7 +515,6 @@ export default function RegisterStudentForm({
         </section>
       </div>
 
-      {/* Footer / Error Area */}
       <div className="mt-4 shrink-0">
         {error && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-2 text-sm text-red-600 dark:text-red-400 animate-in fade-in slide-in-from-bottom-1">
@@ -588,7 +563,6 @@ export default function RegisterStudentForm({
   );
 }
 
-// Helper Components for Cleaner Code
 function SectionHeader({
   number,
   title,

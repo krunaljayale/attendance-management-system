@@ -220,7 +220,7 @@ export default function StudentDetailsModal({
                     {student.name}
                   </h3>
                   <p className="text-secondary dark:text-gray-400 font-medium">
-                    {student.role}
+                    {student.course}
                   </p>
                 </div>
 

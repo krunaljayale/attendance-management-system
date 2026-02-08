@@ -206,7 +206,7 @@ function Students() {
             <StudentCard
               key={student._id}
               name={student.name}
-              role={student.role}
+              course={student.course}
               rollId={student.rollId}
               attendance={student.attendance}
               image={student.image}
