@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { API } from "@/constants/API/api";
 import StudentAttendanceCalendar, {
   AttendanceStatus,
@@ -90,7 +90,57 @@ export default function StudentDetailsModal({
     setIsEditing(false);
   };
 
-  // --- DELETE HANDLER ---
+  const handleGenerateReport = async () => {
+    try {
+
+      const response = await axios.get(
+        `${API.GENERATE_CERTIFICATE}/${studentId}`,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          responseType: "blob",
+        },
+      );
+
+      // Success: Download the file
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${student?.name}_Certificate.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      console.log("Certificate downloaded successfully");
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+
+      if (isAxiosError(error)) {
+        if (error.response && error.response.data) {
+          try {
+            // 1. Convert Blob to text
+            const errorText = await (error.response.data as Blob).text();
+            console.log("Raw Error Text from Server:", errorText); // Check console to see what server sent
+
+            // 2. Try parsing as JSON
+            const errorJson = JSON.parse(errorText);
+            alert(errorJson.message);
+          } catch (jsonError) {
+            // 3. Fallback: If not JSON (likely HTML or 404), show status
+            const status = error.response.status;
+            const statusText = error.response.statusText;
+            alert(`Server Error ${status}: ${statusText || "Request Failed"}`);
+          }
+        } else {
+          alert(`Request failed: ${error.message}`);
+        }
+      } else {
+        alert("An unexpected error occurred.");
+      }
+    }
+  };
+
   const handleDeleteStudent = async () => {
     if (
       !confirm(
@@ -266,7 +316,7 @@ export default function StudentDetailsModal({
                   >
                     Overview
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setActiveTab("attendance")}
                     className={`pb-3 text-sm font-bold transition-all ${
                       activeTab === "attendance"
@@ -275,14 +325,17 @@ export default function StudentDetailsModal({
                     }`}
                   >
                     Attendance Record
-                  </button>
+                  </button> */}
                 </div>
 
                 {activeTab === "profile" ? (
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-3">
-                      <button className="flex-1 px-6 py-2.5 bg-primary dark:bg-white dark:text-primary text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95">
+                      <button
+                        onClick={handleGenerateReport}
+                        className="flex-1 px-6 py-2.5 bg-primary dark:bg-white dark:text-primary text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95"
+                      >
                         Generate Report
                       </button>
 

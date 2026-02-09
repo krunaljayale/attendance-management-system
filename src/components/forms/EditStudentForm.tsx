@@ -162,13 +162,9 @@ export default function EditStudentForm({
       // Ensure we send role matching the course if backend still expects role
       const payload = { ...formData, role: formData.course };
 
-      const response = await axios.put(
-        `${API.EDIT_STUDENT_DETAILS}/${student._id}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
+      const response = await axios.put(API.EDIT_STUDENT_DETAILS, payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       if (response.status === 200) {
         onSave(response.data);
       }

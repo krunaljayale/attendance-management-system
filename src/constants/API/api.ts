@@ -27,4 +27,5 @@ export const API = {
 
   MARK_ATTENDANCE: `${BASE_URL}/admin/mark-attendance`,
   GET_ATTENDANCE: `${BASE_URL}/admin/get-attendance`,
+  GENERATE_CERTIFICATE: `${BASE_URL}/admin/generate-certificate`,
 };
